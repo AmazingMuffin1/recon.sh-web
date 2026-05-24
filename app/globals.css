@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg-0: #06070b;
+  --bg-1: #0a0c12;
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-strong: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --accent: #22d3ee;        /* cyan-400 */
+  --accent-2: #a78bfa;      /* violet-400 */
+  --hit: #f87171;           /* red-400 */
+  --warn: #fbbf24;          /* amber-400 */
+  --ok: #34d399;            /* emerald-400 */
+}
+
+html, body {
+  background: var(--bg-0);
+  color: #e7e9ef;
+  font-feature-settings: "ss01", "cv11";
+  min-height: 100%;
+}
+
+/* Animated gradient mesh — fixed behind everything else. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(900px 600px at 12% -10%, rgba(34, 211, 238, 0.18), transparent 60%),
+    radial-gradient(700px 500px at 105% 0%, rgba(167, 139, 250, 0.18), transparent 60%),
+    radial-gradient(700px 500px at 50% 110%, rgba(244, 63, 94, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+  pointer-events: none;
+}
+
+/* ---------- Glass surfaces ---------- */
+.glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+.glass-strong {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid var(--border-strong);
+}
+
+/* Sticky chrome — stays opaque so scrolling content can't bleed through.
+   We still keep a thin blur for that "weight on glass" feel above the canvas. */
+.chrome {
+  background: rgba(8, 9, 13, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+}
+@supports not ((backdrop-filter: blur(1px))) {
+  .chrome { background: rgba(8, 9, 13, 0.98); }
+}
+.glass-thin {
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+}
+
+/* ---------- Scrollbars ---------- */
+.scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+.scroll-thin::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.16); }
+
+/* ---------- Search highlight (mark) ---------- */
+mark.idx {
+  background: linear-gradient(180deg, #fde68a, #fbbf24);
+  color: #111827;
+  padding: 0 2px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+mark.idx-active {
+  outline: 2px solid #22d3ee;
+  outline-offset: 1px;
+}
+
+/* ---------- Live pulse ---------- */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.92); }
+}
+.live-dot { animation: live-pulse 1.4s ease-in-out infinite; }
+
+/* ---------- Stream-in fade ---------- */
+@keyframes stream-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stream-in { animation: stream-in 220ms ease-out both; }
+
+/* ---------- Keyboard hint pill ---------- */
+.kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: #b9bfcc;
+  line-height: 1.4;
+}
+
+/* ---------- Report download ----------
+   The PDF export captures the .print-view via html2canvas. html2canvas refuses
+   to render `display: none` subtrees, so we MUST NOT hide the element with
+   `display: none`. Instead, the React-side mount host pushes it off-canvas
+   (position: absolute, left: -100000px) — present in the DOM, fully laid
+   out, but invisible and non-interactive on screen. */
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .live-dot, .stream-in { animation: none !important; }
+  * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+}
