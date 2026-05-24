@@ -1011,7 +1011,7 @@ export default function Home() {
       setPrintError(msg);
       // Auto-clear so a transient failure doesn't pin a banner forever.
       setTimeout(() => setPrintError(null), 6000);
-      console.error("[recon-web] PDF export failed:", err);
+      console.error("[recon.sh] PDF export failed:", err);
     } finally {
       setPrintMounted(false);
       setPrintPreparing(false);
@@ -1041,7 +1041,7 @@ export default function Home() {
                 <Crosshair size={16} className="text-black" strokeWidth={2.5} />
               </div>
               <div className="leading-tight text-left">
-                <div className="text-[15px] font-semibold tracking-tight text-white">recon-web</div>
+                <div className="text-[15px] font-semibold tracking-tight text-white">recon.sh</div>
                 <div className="text-[10px] text-neutral-500 tracking-wider uppercase">passive osint</div>
               </div>
             </button>
@@ -1967,7 +1967,7 @@ function PrintReport({
                 fontSize: "13px", fontWeight: 700, letterSpacing: "-0.01em",
                 color: PRINT.text, lineHeight: 1.1,
               }}>
-                recon-web
+                recon.sh
               </div>
               <div style={{
                 fontSize: "8.5px", letterSpacing: "0.18em", color: PRINT.muted,
@@ -2317,7 +2317,7 @@ function PrintReport({
         display: "flex", justifyContent: "space-between",
         letterSpacing: "0.04em",
       }}>
-        <span>recon-web · passive OSINT · zero active probing</span>
+        <span>recon.sh · passive OSINT · zero active probing</span>
         <span style={{ fontVariantNumeric: "tabular-nums" }}>{dateStr}</span>
       </footer>
     </div>

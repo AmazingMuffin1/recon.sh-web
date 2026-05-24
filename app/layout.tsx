@@ -15,7 +15,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "recon-web — Passive OSINT",
+  title: "recon.sh — Passive OSINT",
   description: "Passive OSINT recon with live streaming results and cross-phase hit indexing.",
 };
 

@@ -1,4 +1,4 @@
-# recon-web
+# recon.sh
 
 > **Live instance: <https://recon-sh.com>** — free to use, under the acceptable-use terms below.
 
@@ -10,7 +10,7 @@ The application **never connects to, probes, or scans the target itself**. Every
 
 ## What it does
 
-For any public domain you give it, recon-web gathers and cross-references:
+For any public domain you give it, recon.sh gathers and cross-references:
 
 - **WHOIS / RDAP** — registrar, dates, status, DNSSEC, nameservers, contacts.
 - **DNS** — A / AAAA / MX / NS / TXT / SOA / CNAME / DKIM via DNS-over-HTTPS.
