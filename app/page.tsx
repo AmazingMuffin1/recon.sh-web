@@ -1027,97 +1027,32 @@ export default function Home() {
     <>
       <main className="screen-view min-h-screen flex flex-col">
         {/* ============== HEADER ============== */}
-        <header className="sticky top-0 z-30 chrome border-b border-white/10">
-          <div className="px-5 py-3 flex items-center gap-3">
+        <header className="sticky top-0 z-30 chrome border-b border-white/10 safe-px safe-pt">
+          {/* Two-row layout on mobile, single-row on md+. Row 1 is always the
+              brand + compact action buttons; row 2 is the domain form, with
+              the index search collapsing under it. On md+ everything flattens
+              into a single line via flex-wrap defaults. */}
+          <div className="px-3 sm:px-5 py-2.5 sm:py-3 flex flex-wrap md:flex-nowrap items-center gap-2 sm:gap-3">
             {/* Brand — click to return to home / start a new scan */}
             <button
               type="button"
               onClick={goHome}
               aria-label="Return to home"
               title="Return to home"
-              className="flex items-center gap-2.5 mr-2 rounded-lg px-1 -mx-1 py-0.5 hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 transition group"
+              className="flex items-center gap-2 sm:gap-2.5 rounded-lg px-1 -mx-1 py-0.5 hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 transition group shrink-0"
             >
               <div className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition">
                 <Crosshair size={16} className="text-black" strokeWidth={2.5} />
               </div>
               <div className="leading-tight text-left">
                 <div className="text-[15px] font-semibold tracking-tight text-white">recon.sh</div>
-                <div className="text-[10px] text-neutral-500 tracking-wider uppercase">passive osint</div>
+                <div className="hidden sm:block text-[10px] text-neutral-500 tracking-wider uppercase">passive osint</div>
               </div>
             </button>
 
-            {/* Domain form */}
-            <form onSubmit={start} className="flex items-center gap-2 flex-1 min-w-[260px] max-w-3xl">
-              <div className="relative flex-1">
-                <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
-                <input
-                  ref={domainRef}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-cyan-400/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-cyan-400/20 transition text-sm placeholder:text-neutral-500"
-                  placeholder="example.com"
-                  value={domain}
-                  onChange={(e) => setDomain(e.target.value)}
-                  disabled={running}
-                  autoFocus
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  inputMode="url"
-                />
-              </div>
-              {!running ? (
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-b from-cyan-400 to-cyan-500 text-black text-sm font-medium hover:from-cyan-300 hover:to-cyan-400 transition shadow-lg shadow-cyan-500/20"
-                >
-                  <Zap size={14} strokeWidth={2.5} />
-                  Run scan
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={stop}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm font-medium hover:bg-red-500/30 transition"
-                >
-                  <Square size={12} strokeWidth={3} fill="currentColor" />
-                  Stop
-                </button>
-              )}
-            </form>
-
-            {/* Search / index */}
-            <div className="relative flex-1 max-w-2xl">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
-              <input
-                ref={searchRef}
-                className="w-full pl-9 pr-32 py-2 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-violet-400/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-violet-400/20 transition text-sm placeholder:text-neutral-500"
-                placeholder="Index search…"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                {filter ? (
-                  <>
-                    <span className="text-[10px] tabular-nums text-neutral-400">
-                      {matchCount > 0 ? `${(((activeMatch % matchCount) + matchCount) % matchCount) + 1}/${matchCount}` : "0"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setFilter("")}
-                      className="p-0.5 rounded hover:bg-white/10 text-neutral-400 hover:text-white"
-                      aria-label="Clear search"
-                    >
-                      <X size={12} />
-                    </button>
-                  </>
-                ) : (
-                  <span className="kbd">/</span>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2">
+            {/* Action cluster — appears on the right of row 1 on mobile, and
+                between form/search on desktop via order tweaks below. */}
+            <div className="flex items-center gap-1.5 sm:gap-2 ml-auto md:order-3 shrink-0">
               <div className="hidden md:flex items-center rounded-xl border border-white/10 bg-white/5 overflow-hidden text-xs">
                 <button
                   onClick={() => setView("phases")}
@@ -1138,6 +1073,25 @@ export default function Home() {
                 </button>
               </div>
 
+              {/* Mobile-only view toggle: a single button that flips between
+                  Phases and Hits, with the hit count tucked on the right. */}
+              <button
+                type="button"
+                onClick={() => setView(view === "phases" ? "hits" : "phases")}
+                className={`md:hidden inline-flex items-center gap-1 px-2.5 py-2 rounded-xl border text-xs transition ${
+                  view === "hits"
+                    ? "bg-red-500/15 border-red-500/30 text-red-200"
+                    : "bg-white/5 border-white/10 text-neutral-200 hover:bg-white/[0.08]"
+                }`}
+                aria-label={view === "phases" ? "Switch to hits view" : "Switch to phases view"}
+                title={view === "phases" ? "Hits view" : "Phases view"}
+              >
+                {view === "phases" ? <Layers size={14} /> : <Crosshair size={14} />}
+                {view === "hits" && totals.hits > 0 && (
+                  <span className="tabular-nums text-[10px]">{totals.hits}</span>
+                )}
+              </button>
+
               <label className="hidden md:flex items-center gap-1.5 text-xs text-neutral-300 select-none px-2 py-2 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/[0.08] transition">
                 <Filter size={12} />
                 <input type="checkbox" checked={hitsOnly} onChange={(e) => setHitsOnly(e.target.checked)} className="accent-cyan-400" />
@@ -1147,7 +1101,7 @@ export default function Home() {
               <button
                 onClick={() => setSettingsOpen(true)}
                 type="button"
-                className={`relative inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs transition ${
+                className={`relative inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border text-xs transition ${
                   apiKeysActive
                     ? "bg-cyan-500/10 border-cyan-400/40 text-cyan-200 hover:bg-cyan-500/15"
                     : "bg-white/5 border-white/10 text-neutral-200 hover:bg-white/[0.08] hover:border-white/20"
@@ -1166,25 +1120,100 @@ export default function Home() {
                 onClick={exportReport}
                 disabled={phases.length === 0 || printPreparing}
                 type="button"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-xs hover:bg-white/[0.08] hover:border-white/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-xs hover:bg-white/[0.08] hover:border-white/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Download report as PDF (no print preview)"
+                aria-label="Download PDF report"
               >
                 {printPreparing ? (
                   <>
                     <span className="inline-block w-3 h-3 rounded-full border-2 border-cyan-300/40 border-t-cyan-300 animate-spin" />
-                    Saving…
+                    <span className="hidden sm:inline">Saving…</span>
                   </>
                 ) : (
                   <>
-                    <FileDown size={13} /> Download
+                    <FileDown size={13} />
+                    <span className="hidden sm:inline">Download</span>
                   </>
                 )}
               </button>
             </div>
+
+            {/* Domain form — full width on mobile (wraps to row 2), shares
+                row with the rest on md+. */}
+            <form onSubmit={start} className="order-3 md:order-2 flex items-center gap-2 w-full md:flex-1 md:w-auto md:max-w-3xl">
+              <div className="relative flex-1 min-w-0">
+                <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                <input
+                  ref={domainRef}
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-cyan-400/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-cyan-400/20 transition text-sm placeholder:text-neutral-500"
+                  placeholder="example.com"
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  disabled={running}
+                  autoFocus
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  inputMode="url"
+                />
+              </div>
+              {!running ? (
+                <button
+                  type="submit"
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-b from-cyan-400 to-cyan-500 text-black text-sm font-medium hover:from-cyan-300 hover:to-cyan-400 transition shadow-lg shadow-cyan-500/20"
+                >
+                  <Zap size={14} strokeWidth={2.5} />
+                  Run scan
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={stop}
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm font-medium hover:bg-red-500/30 transition"
+                >
+                  <Square size={12} strokeWidth={3} fill="currentColor" />
+                  Stop
+                </button>
+              )}
+            </form>
+
+            {/* Search / index — only shown once results exist on mobile (no
+                point indexing an empty page). On md+ it always renders so the
+                header layout doesn't jump when the first event arrives. */}
+            <div className={`order-4 md:order-2 relative w-full md:w-auto md:flex-1 md:max-w-2xl ${phases.length === 0 ? "hidden md:block" : ""}`}>
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+              <input
+                ref={searchRef}
+                className="w-full pl-9 pr-24 sm:pr-32 py-2 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-violet-400/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-violet-400/20 transition text-sm placeholder:text-neutral-500"
+                placeholder="Index search…"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                {filter ? (
+                  <>
+                    <span className="text-[10px] tabular-nums text-neutral-400">
+                      {matchCount > 0 ? `${(((activeMatch % matchCount) + matchCount) % matchCount) + 1}/${matchCount}` : "0"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFilter("")}
+                      className="p-0.5 rounded hover:bg-white/10 text-neutral-400 hover:text-white"
+                      aria-label="Clear search"
+                    >
+                      <X size={12} />
+                    </button>
+                  </>
+                ) : (
+                  <span className="hidden sm:inline kbd">/</span>
+                )}
+              </div>
+            </div>
           </div>
 
           {printError && (
-            <div className="px-5 py-2 flex items-center gap-2 text-[11px] border-t border-red-500/20 bg-red-500/10 text-red-200">
+            <div className="px-3 sm:px-5 py-2 flex items-center gap-2 text-[11px] border-t border-red-500/20 bg-red-500/10 text-red-200">
               <AlertTriangle size={12} />
               PDF export failed: {printError}
               <button
@@ -1200,7 +1229,7 @@ export default function Home() {
 
           {/* Status strip */}
           {scanMeta && (
-            <div className="px-5 py-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] border-t border-white/5 bg-black/20">
+            <div className="px-3 sm:px-5 py-2 flex flex-wrap items-center gap-x-4 sm:gap-x-5 gap-y-1 text-[11px] border-t border-white/5 bg-black/20">
               <div className="flex items-center gap-2">
                 {running ? (
                   <span className="inline-flex items-center gap-1.5 text-amber-300">
@@ -1230,14 +1259,14 @@ export default function Home() {
 
         {/* ============== EMPTY STATE ============== */}
         {phases.length === 0 ? (
-          <div className="flex-1 overflow-y-auto scroll-thin">
-            <div className="max-w-7xl mx-auto px-6 py-16">
+          <div className="flex-1 overflow-y-auto scroll-thin safe-px">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16">
               {/* Hero */}
-              <div className="text-center mb-14">
-                <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-white mb-4">
+              <div className="text-center mb-8 sm:mb-14">
+                <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold tracking-tight text-white mb-3 sm:mb-4 leading-[1.1]">
                   Passive recon, <span className="bg-gradient-to-r from-cyan-300 to-violet-400 bg-clip-text text-transparent">indexed in real-time</span>
                 </h1>
-                <p className="text-neutral-400 text-base max-w-2xl mx-auto leading-relaxed">
+                <p className="text-neutral-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed px-2 sm:px-0">
                   Type a domain. Watch 13 phases of OSINT data — WHOIS, DNS, subdomains, archives, repos, threat intel — stream into a single searchable index. No probes, no noise.
                 </p>
                 <button
@@ -1246,7 +1275,7 @@ export default function Home() {
                     domainRef.current?.select();
                   }}
                   type="button"
-                  className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl glass text-sm hover:bg-white/[0.08] transition"
+                  className="mt-5 sm:mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl glass text-sm hover:bg-white/[0.08] transition"
                 >
                   <ArrowRight size={14} />
                   Enter a domain to start
@@ -1254,9 +1283,9 @@ export default function Home() {
               </div>
 
               {/* Feature grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12">
                 {FEATURES.map(({ icon: Icon, title, body, color }) => (
-                  <div key={title} className="glass rounded-2xl p-5 relative overflow-hidden group hover:border-white/20 transition">
+                  <div key={title} className="glass rounded-2xl p-4 sm:p-5 relative overflow-hidden group hover:border-white/20 transition">
                     <div
                       className="absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition"
                       style={{ background: color }}
@@ -1276,17 +1305,17 @@ export default function Home() {
               </div>
 
               {/* Trust strip */}
-              <div className="glass rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
+              <div className="glass rounded-2xl p-4 sm:p-5">
+                <div className="flex items-start sm:items-center justify-between mb-3 sm:mb-4 gap-3">
+                  <div className="min-w-0">
                     <div className="text-xs uppercase tracking-[0.14em] text-neutral-500 mb-0.5">Sources</div>
-                    <div className="text-sm text-neutral-300">Aggregated public datasets — zero direct contact with the target</div>
+                    <div className="text-xs sm:text-sm text-neutral-300">Aggregated public datasets — zero direct contact with the target</div>
                   </div>
-                  <Database size={18} className="text-neutral-500" />
+                  <Database size={18} className="text-neutral-500 shrink-0" />
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {SOURCES.map(({ name, icon: Icon }) => (
-                    <span key={name} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-neutral-300">
+                    <span key={name} className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-white/5 border border-white/10 text-[11px] sm:text-xs text-neutral-300">
                       <Icon size={12} className="text-neutral-400" />
                       {name}
                     </span>
@@ -1298,8 +1327,9 @@ export default function Home() {
         ) : (
           /* ============== DASHBOARD ============== */
           <div className="flex flex-1 overflow-hidden">
-            {/* Phase rail */}
-            <nav className="w-64 xl:w-72 shrink-0 border-r border-white/5 overflow-y-auto scroll-thin py-4 px-3">
+            {/* Phase rail — hidden on mobile; a horizontal pill strip above
+                the content area takes its place there. */}
+            <nav className="hidden md:flex md:flex-col w-64 xl:w-72 shrink-0 border-r border-white/5 overflow-y-auto scroll-thin py-4 px-3">
               <div className="px-2 mb-3 text-[10px] uppercase tracking-[0.14em] text-neutral-500">Navigation</div>
               <button
                 onClick={() => { setView("phases"); setPhaseScope("all"); }}
@@ -1359,7 +1389,66 @@ export default function Home() {
 
             {/* Content */}
             <div ref={contentRef} className="flex-1 overflow-y-auto scroll-thin">
-              <div className="px-6 py-5 max-w-[1700px] mx-auto">
+              {/* Mobile-only horizontal phase rail. Scrolls left-right so the
+                  full list is reachable without eating vertical space. */}
+              <div className="md:hidden sticky top-0 z-10 chrome border-b border-white/5 overflow-x-auto scroll-thin">
+                <div className="flex items-center gap-1.5 px-3 py-2 min-w-max">
+                  <button
+                    type="button"
+                    onClick={() => { setView("phases"); setPhaseScope("all"); }}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs whitespace-nowrap transition ${
+                      view === "phases" && phaseScope === "all"
+                        ? "bg-white/10 text-white"
+                        : "text-neutral-400 hover:text-white border border-white/10"
+                    }`}
+                  >
+                    <Layers size={12} /> All
+                    <span className="text-[10px] tabular-nums text-neutral-500">{phases.length}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setView("hits")}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs whitespace-nowrap transition ${
+                      view === "hits"
+                        ? "bg-red-500/15 text-red-200"
+                        : "text-neutral-400 hover:text-white border border-white/10"
+                    }`}
+                  >
+                    <Crosshair size={12} /> Hits
+                    {totals.hits > 0 && (
+                      <span className="text-[10px] tabular-nums">{totals.hits}</span>
+                    )}
+                  </button>
+                  <span className="w-px h-5 bg-white/10 mx-0.5" />
+                  {phases.map((p) => {
+                    const c = phaseCounts.get(p.id) ?? { items: 0, hits: 0 };
+                    const Icon = PHASE_ICON[p.id];
+                    const isActive = view === "phases" && phaseScope === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => { setView("phases"); setPhaseScope(p.id); }}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs whitespace-nowrap transition ${
+                          isActive
+                            ? "bg-white/10 text-white"
+                            : "text-neutral-400 hover:text-white border border-white/10"
+                        }`}
+                      >
+                        <Icon size={12} style={{ color: PHASE_COLORS[p.id] }} />
+                        <span>{p.title}</span>
+                        {p.status === "running" && (
+                          <span className="live-dot w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        )}
+                        {c.hits > 0 && (
+                          <span className="text-[10px] tabular-nums text-red-300">{c.hits}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="px-3 sm:px-6 py-3 sm:py-5 max-w-[1700px] mx-auto">
                 {view === "hits" ? (
                   <HitsView
                     hits={visibleHits}
