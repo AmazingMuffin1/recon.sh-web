@@ -1322,6 +1322,25 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+
+              <footer className="mt-10 sm:mt-14 pt-6 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-[11px] sm:text-xs text-neutral-500">
+                <div className="flex items-center gap-1.5">
+                  <Crosshair size={11} className="text-neutral-600" />
+                  <span>recon.sh · passive OSINT · no cookies, no accounts</span>
+                </div>
+                <nav className="flex items-center gap-3 sm:gap-4">
+                  <a href="/privacy" className="hover:text-white transition">Privacy</a>
+                  <a href="/cookies" className="hover:text-white transition">Cookies</a>
+                  <a
+                    href="https://github.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition"
+                  >
+                    GitHub
+                  </a>
+                </nav>
+              </footer>
             </div>
           </div>
         ) : (
