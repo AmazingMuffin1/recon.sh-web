@@ -1712,6 +1712,9 @@ export default function Home() {
             left: "-100000px",
             top: 0,
             width: `${PRINT_HOST_WIDTH_PX}px`,
+            maxWidth: `${PRINT_HOST_WIDTH_PX}px`,
+            overflow: "hidden",
+            boxSizing: "border-box",
             pointerEvents: "none",
           }}
         >
@@ -2065,6 +2068,15 @@ function PrintReport({
         letterSpacing: "-0.005em",
         padding: 0,
         minHeight: "100vh",
+        // Hard-cap the rendered width so html2canvas cannot capture beyond
+        // the offscreen host; combined with overflow:hidden on the host,
+        // this prevents long URLs / wide tables from being cropped on the
+        // right edge of each PDF page.
+        width: "100%",
+        maxWidth: "100%",
+        boxSizing: "border-box",
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
       }}
     >
       {/* === HEADER BAND === */}
@@ -2355,16 +2367,98 @@ function PrintReport({
         })}
       </section>
 
-      <footer style={{
-        marginTop: "16px", paddingTop: "8px",
-        borderTop: `1px dashed ${PRINT.border}`,
-        fontSize: "8.5px", color: PRINT.subtle,
-        display: "flex", justifyContent: "space-between",
-        letterSpacing: "0.04em",
-      }}>
-        <span>recon.sh · passive OSINT · {scanMeta?.domain ?? "—"}</span>
-        <span style={{ fontVariantNumeric: "tabular-nums" }}>{dateStr}</span>
-      </footer>
+      <section
+        style={{
+          marginTop: "18px",
+          padding: "28px 22px",
+          borderRadius: "12px",
+          position: "relative",
+          overflow: "hidden",
+          background: `
+            radial-gradient(420px 240px at 100% 0%, rgba(167, 139, 250, 0.20), transparent 65%),
+            radial-gradient(420px 240px at 0% 100%, rgba(34, 211, 238, 0.20), transparent 65%),
+            linear-gradient(140deg, ${PRINT.surfaceWarm}, ${PRINT.bg})
+          `,
+          border: `1px solid ${PRINT.border}`,
+          pageBreakInside: "avoid",
+        }}
+      >
+        <div style={{
+          position: "absolute", inset: 0, top: 0, height: "3px",
+          background: `linear-gradient(90deg, ${PRINT.brandFrom}, ${PRINT.brandMid} 55%, ${PRINT.brandTo})`,
+        }} />
+        <div style={{
+          position: "absolute", right: "-20px", bottom: "-30px",
+          opacity: 0.08, pointerEvents: "none",
+        }}>
+          <Crosshair size={180} color={PRINT.brandFrom} strokeWidth={1.2} />
+        </div>
+
+        <div style={{
+          display: "flex", alignItems: "flex-start", gap: "14px",
+          position: "relative",
+        }}>
+          <div style={{
+            width: "42px", height: "42px", borderRadius: "11px",
+            background: `linear-gradient(135deg, ${PRINT.brandFrom}, ${PRINT.brandMid})`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+            boxShadow: `0 8px 18px -6px ${PRINT.brandFrom}55`,
+          }}>
+            <Crosshair size={22} color="#0a0c12" strokeWidth={2.5} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: "22px", fontWeight: 700, letterSpacing: "-0.025em",
+              lineHeight: 1.1,
+              background: `linear-gradient(90deg, ${PRINT.text} 0%, ${PRINT.brandFrom} 55%, ${PRINT.brandMid} 100%)`,
+              WebkitBackgroundClip: "text", backgroundClip: "text",
+              color: "transparent",
+            }}>
+              recon.sh
+            </div>
+            <div style={{
+              marginTop: "3px",
+              fontSize: "9.5px", color: PRINT.muted, letterSpacing: "0.14em",
+              textTransform: "uppercase", fontWeight: 600,
+            }}>
+              passive OSINT · indexed in real-time
+            </div>
+            <div style={{
+              marginTop: "12px",
+              display: "flex", flexWrap: "wrap", gap: "8px 14px",
+              fontSize: "9.5px", color: PRINT.body,
+            }}>
+              <span><strong style={{ color: PRINT.text }}>Live:</strong> recon-sh.com</span>
+              <span><strong style={{ color: PRINT.text }}>Source:</strong> github.com/AmazingMuffin1/recon.sh-web</span>
+            </div>
+            <div style={{
+              marginTop: "10px",
+              fontSize: "9px", color: PRINT.subtle, lineHeight: 1.55,
+              maxWidth: "560px",
+            }}>
+              This report is generated entirely from public / third-party OSINT
+              datasets. The application never connects to, scans, or probes the
+              target — every signal here was retrieved from a public source.
+              For defensive research and educational use only.
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          marginTop: "16px", paddingTop: "10px",
+          borderTop: `1px dashed ${PRINT.borderLight}`,
+          display: "flex", flexWrap: "wrap", justifyContent: "space-between",
+          gap: "8px",
+          fontSize: "8.5px", color: PRINT.subtle, letterSpacing: "0.06em",
+          textTransform: "uppercase", fontWeight: 600,
+          position: "relative",
+        }}>
+          <span>{scanMeta?.domain ?? "—"}</span>
+          <span style={{ fontVariantNumeric: "tabular-nums" }}>{dateStr}</span>
+          <span>END OF REPORT</span>
+        </div>
+      </section>
     </div>
   );
 }
