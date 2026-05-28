@@ -2044,159 +2044,156 @@ function PrintReport({
     phaseStats.set(p.id, { items, hits });
   }
 
+  const phasesDone = phases.filter((p) => p.status === "done").length;
+  const orderedHits = [...hitsByPhase.entries()].sort(
+    (a, b) => PHASE_ORDER.indexOf(a[0]) - PHASE_ORDER.indexOf(b[0])
+  );
+
   return (
     <div
       className="print-view"
       style={{
         background: `
-          radial-gradient(900px 600px at 12% -10%, rgba(34, 211, 238, 0.10), transparent 60%),
-          radial-gradient(700px 500px at 105% 0%, rgba(167, 139, 250, 0.10), transparent 60%),
-          radial-gradient(700px 500px at 50% 110%, rgba(244, 63, 94, 0.06), transparent 60%),
+          radial-gradient(600px 320px at 8% -10%, rgba(34, 211, 238, 0.07), transparent 60%),
+          radial-gradient(500px 320px at 105% 0%, rgba(167, 139, 250, 0.07), transparent 60%),
           ${PRINT.bg}
         `,
         color: PRINT.text2,
         fontFamily: "var(--font-sans), Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
-        fontSize: "10.5px",
-        lineHeight: 1.55,
+        fontSize: "10px",
+        lineHeight: 1.5,
         letterSpacing: "-0.005em",
-        // Page gutters are now driven by @page margins in globals.css so the
-        // gutter applies to every page, not just the first.
         padding: 0,
         minHeight: "100vh",
       }}
     >
-      {/* ===== COVER ===== */}
-      <section style={{ marginBottom: "20px", pageBreakInside: "avoid" }}>
+      {/* === HEADER BAND === */}
+      <section style={{ marginBottom: "12px" }}>
         <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          gap: "16px", marginBottom: "16px",
+          display: "flex", alignItems: "center", gap: "10px",
+          paddingBottom: "9px",
+          borderBottom: `1px solid ${PRINT.border}`,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{
+            width: "26px", height: "26px", borderRadius: "7px",
+            background: `linear-gradient(135deg, ${PRINT.brandFrom}, ${PRINT.brandMid})`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <Crosshair size={14} color="#0a0c12" strokeWidth={2.5} />
+          </div>
+          <div style={{ flex: 1, lineHeight: 1.1 }}>
             <div style={{
-              width: "34px", height: "34px", borderRadius: "9px",
-              background: `linear-gradient(135deg, ${PRINT.brandFrom}, ${PRINT.brandMid})`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: `0 6px 16px -4px ${PRINT.brandFrom}40`,
+              fontSize: "13px", fontWeight: 700, letterSpacing: "-0.01em",
+              color: PRINT.text,
             }}>
-              <Crosshair size={17} color="#0a0c12" strokeWidth={2.5} />
+              recon.sh
+              <span style={{
+                marginLeft: "8px", color: PRINT.subtle, fontWeight: 400,
+                fontSize: "10.5px", letterSpacing: 0,
+              }}>
+                / OSINT report
+              </span>
             </div>
-            <div>
-              <div style={{
-                fontSize: "13px", fontWeight: 700, letterSpacing: "-0.01em",
-                color: PRINT.text, lineHeight: 1.1,
-              }}>
-                recon.sh
-              </div>
-              <div style={{
-                fontSize: "8.5px", letterSpacing: "0.18em", color: PRINT.muted,
-                textTransform: "uppercase", marginTop: "1px", fontWeight: 600,
-              }}>
-                passive osint
-              </div>
+            <div style={{
+              marginTop: "2px",
+              fontSize: "8.5px", letterSpacing: "0.16em", color: PRINT.muted,
+              textTransform: "uppercase", fontWeight: 600,
+            }}>
+              passive · zero active probing
             </div>
           </div>
           {scanMeta && (
-            <div style={{ textAlign: "right" }}>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: "6px",
-                padding: "5px 11px", borderRadius: "999px",
-                border: `1px solid ${running ? PRINT.warnBorder : PRINT.okBorder}`,
-                background: running ? PRINT.warnBg : PRINT.okBg,
-                color: running ? PRINT.warn : PRINT.ok,
-                fontSize: "9.5px", fontWeight: 700, letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}>
-                <span style={{
-                  width: "6px", height: "6px", borderRadius: "999px",
-                  background: running ? PRINT.warnDot : "#16a34a",
-                }} />
-                {running ? "Partial scan" : "Complete"}
-              </div>
-              <div style={{ fontSize: "9.5px", color: PRINT.muted, marginTop: "5px" }}>
-                {dateStr}
-              </div>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "5px",
+              padding: "3px 8px", borderRadius: "999px",
+              border: `1px solid ${running ? PRINT.warnBorder : PRINT.okBorder}`,
+              background: running ? PRINT.warnBg : PRINT.okBg,
+              color: running ? PRINT.warn : PRINT.ok,
+              fontSize: "8.5px", fontWeight: 700, letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}>
+              <span style={{
+                width: "5px", height: "5px", borderRadius: "999px",
+                background: running ? PRINT.warnDot : "#16a34a",
+              }} />
+              {running ? "Partial" : "Complete"}
             </div>
           )}
+          <div style={{
+            fontSize: "9px", color: PRINT.muted,
+            fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap",
+          }}>
+            {dateStr}
+          </div>
         </div>
 
-        {/* Brand gradient rule */}
-        <div style={{
-          height: "3px", borderRadius: "2px",
-          background: `linear-gradient(90deg, ${PRINT.brandFrom}, ${PRINT.brandMid} 55%, ${PRINT.brandTo})`,
-          marginBottom: "18px",
-        }} />
-
-        <h1 style={{
-          fontSize: "32px", fontWeight: 700, letterSpacing: "-0.025em",
-          margin: 0, lineHeight: 1.05,
-          background: `linear-gradient(90deg, ${PRINT.text} 0%, ${PRINT.brandFrom} 60%, ${PRINT.brandMid} 100%)`,
-          WebkitBackgroundClip: "text", backgroundClip: "text",
-          color: "transparent",
-        }}>
-          OSINT Intelligence Report
-        </h1>
         {scanMeta && (
           <div style={{
             marginTop: "10px",
-            display: "inline-flex", alignItems: "baseline", gap: "10px",
-            padding: "7px 14px", borderRadius: "10px",
-            background: PRINT.surface,
-            border: `1px solid ${PRINT.border}`,
+            display: "flex", alignItems: "baseline", gap: "14px", flexWrap: "wrap",
           }}>
-            <span style={{
-              fontSize: "9px", letterSpacing: "0.16em", color: PRINT.muted,
-              textTransform: "uppercase", fontWeight: 600,
+            <div style={{
+              display: "inline-flex", alignItems: "baseline", gap: "8px",
+              padding: "4px 10px", borderRadius: "8px",
+              background: PRINT.surface,
+              border: `1px solid ${PRINT.border}`,
             }}>
-              Target
-            </span>
-            <span style={{
-              fontFamily: "var(--font-mono), ui-monospace, monospace",
-              fontSize: "14px", fontWeight: 600, color: PRINT.text,
-            }}>
-              {scanMeta.domain}
-            </span>
+              <span style={{
+                fontSize: "8.5px", letterSpacing: "0.14em", color: PRINT.muted,
+                textTransform: "uppercase", fontWeight: 700,
+              }}>
+                Target
+              </span>
+              <span style={{
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
+                fontSize: "13px", fontWeight: 700, color: PRINT.text,
+                letterSpacing: "-0.01em",
+              }}>
+                {scanMeta.domain}
+              </span>
+            </div>
+            <PrintMetric label="Findings" value={totals.items} />
+            <PrintMetric label="Hits" value={totals.hits} accent={totals.hits > 0 ? PRINT.hitText : undefined} dot={totals.hits > 0 ? PRINT.hitDot : undefined} />
+            <PrintMetric label="Phases" value={`${phasesDone}/${phases.length}`} />
           </div>
         )}
       </section>
 
-      {/* ===== KPI STRIP ===== */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px",
-        marginBottom: "12px",
-      }}>
-        <PrintKpi label="Findings"  value={totals.items}                               accent={PRINT.brandFrom} />
-        <PrintKpi label="Hits"      value={totals.hits} valueColor={PRINT.hitTextBold} accent={PRINT.hitDot} glow />
-        <PrintKpi label="Phases"    value={`${phases.filter((p) => p.status === "done").length}/${phases.length}`} accent={PRINT.brandMid} />
-        <PrintKpi label="Status"    value={running ? "Partial" : "Complete"}            accent={running ? PRINT.warnDot : "#10b981"} />
-      </div>
-
-      {/* ===== BENTO: DONUT + DENSITY BARS ===== */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "1.35fr 1fr", gap: "8px",
-        marginBottom: "14px", pageBreakInside: "avoid",
-      }}>
-        {/* Donut card */}
-        <PrintCard>
-          <PrintCardTitle title="Findings by phase" hint="Click filter on dashboard" />
-          <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <DonutChart data={pieData} size={150} thickness={20} />
-            <table style={{ borderCollapse: "collapse", flex: 1, fontSize: "10.5px" }}>
+      {/* === SCAN OVERVIEW — donut + density in one tight block === */}
+      <PrintGutterBlock color={PRINT.accent}>
+        <div style={{
+          display: "flex", alignItems: "stretch", gap: "16px",
+        }}>
+          <div style={{ flexShrink: 0, alignSelf: "center" }}>
+            <DonutChart data={pieData} size={110} thickness={15} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: "9px", letterSpacing: "0.16em", textTransform: "uppercase",
+              color: PRINT.muted, fontWeight: 700, marginBottom: "5px",
+            }}>
+              Phase breakdown
+            </div>
+            <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "10px" }}>
               <tbody>
-                {pieData.map((d) => {
-                  const pct = totals.items === 0 ? 0 : Math.round((d.value / totals.items) * 100);
-                  const Icon = PHASE_ICON[d.id as PhaseId];
+                {phases.map((p) => {
+                  const c = phaseStats.get(p.id) ?? { items: 0, hits: 0 };
+                  const pct = c.items === 0 ? 0 : Math.round((c.hits / Math.max(1, c.items)) * 100);
+                  const Icon = PHASE_ICON[p.id];
                   return (
-                    <tr key={d.id}>
-                      <td style={{ padding: "2.5px 8px 2.5px 0", width: "14px" }}>
-                        <Icon size={11} color={d.color} />
+                    <tr key={p.id} style={{ verticalAlign: "middle" }}>
+                      <td style={{ padding: "1.5px 8px 1.5px 0", width: "12px" }}>
+                        <Icon size={10} color={PHASE_COLORS[p.id]} />
                       </td>
-                      <td style={{ padding: "2.5px 8px 2.5px 0", color: PRINT.body }}>{d.label}</td>
+                      <td style={{ padding: "1.5px 6px 1.5px 0", color: PRINT.body }}>{p.title}</td>
                       <td style={{
-                        padding: "2.5px 0", color: PRINT.muted, textAlign: "right",
-                        fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap",
+                        padding: "1.5px 0", color: PRINT.muted, textAlign: "right",
+                        fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", width: "85px",
                       }}>
-                        <strong style={{ color: PRINT.text, marginRight: "8px" }}>{d.value}</strong>
-                        {pct}%
+                        <strong style={{ color: c.hits > 0 ? PRINT.hitText : PRINT.text }}>{c.hits}</strong>
+                        <span style={{ opacity: 0.5 }}> / {c.items}</span>
+                        {c.hits > 0 && <span style={{ marginLeft: "6px", color: PRINT.subtle }}>({pct}%)</span>}
                       </td>
                     </tr>
                   );
@@ -2204,145 +2201,88 @@ function PrintReport({
               </tbody>
             </table>
           </div>
-        </PrintCard>
+        </div>
+      </PrintGutterBlock>
 
-        {/* Hit density card */}
-        <PrintCard>
-          <PrintCardTitle title="Hit density" hint="Hits / total per phase" />
-          <div>
-            {phases.map((p) => {
-              const c = phaseStats.get(p.id) ?? { items: 0, hits: 0 };
-              const pct = c.items === 0 ? 0 : (c.hits / c.items) * 100;
-              const Icon = PHASE_ICON[p.id];
-              return (
-                <div key={p.id} style={{ marginBottom: "5px" }}>
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: "6px",
-                    fontSize: "9.5px", marginBottom: "2px",
-                  }}>
-                    <Icon size={10} color={PHASE_COLORS[p.id]} />
-                    <span style={{ flex: 1, color: PRINT.body }}>{p.title}</span>
-                    <span style={{
-                      fontSize: "9px", color: PRINT.muted, fontVariantNumeric: "tabular-nums",
-                    }}>
-                      <strong style={{ color: c.hits > 0 ? PRINT.hitText : PRINT.text }}>{c.hits}</strong>
-                      <span style={{ opacity: 0.6 }}> / {c.items}</span>
-                    </span>
-                  </div>
-                  <div style={{
-                    height: "4px", borderRadius: "999px",
-                    background: PRINT.borderLight, overflow: "hidden",
-                  }}>
-                    <div style={{
-                      height: "100%", width: `${pct}%`,
-                      background: pct > 0
-                        ? `linear-gradient(90deg, ${PRINT.hitDot}, #fb7185)`
-                        : "transparent",
-                      borderRadius: "999px",
-                    }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </PrintCard>
-      </div>
-
-      {/* ===== HITS INDEX ===== */}
+      {/* === HITS INDEX === */}
       {flatHits.length > 0 && (
-        <section style={{ marginBottom: "14px" }}>
+        <PrintGutterBlock color={PRINT.hitDot} accentTint>
           <div style={{
-            background: `linear-gradient(180deg, rgba(239, 68, 68, 0.06), rgba(239, 68, 68, 0.02))`,
-            border: `1px solid ${PRINT.hitBorder}`,
-            borderRadius: "12px", padding: "13px 16px",
+            display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px",
           }}>
-            <div style={{
-              display: "flex", alignItems: "center", gap: "10px",
-              paddingBottom: "10px", borderBottom: `1px solid ${PRINT.hitBorder}`,
-              marginBottom: "10px",
-            }}>
-              <div style={{
-                width: "28px", height: "28px", borderRadius: "8px",
-                background: "rgba(239, 68, 68, 0.15)",
-                border: `1px solid ${PRINT.hitBorder}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <Crosshair size={14} color={PRINT.hitText} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: PRINT.text }}>
-                  Hits Index
-                </div>
-                <div style={{ fontSize: "10px", color: PRINT.muted }}>
-                  {flatHits.length} sensitive finding{flatHits.length === 1 ? "" : "s"} across {hitsByPhase.size} phase{hitsByPhase.size === 1 ? "" : "s"}
-                </div>
-              </div>
-              <span style={{
-                fontSize: "10px", color: PRINT.hitText, fontWeight: 700,
-                fontVariantNumeric: "tabular-nums",
-              }}>
-                {flatHits.length}
-              </span>
-            </div>
-
-            {[...hitsByPhase.entries()]
-              .sort((a, b) => PHASE_ORDER.indexOf(a[0]) - PHASE_ORDER.indexOf(b[0]))
-              .map(([pid, { phaseTitle, rows }], idx, arr) => {
-                const Icon = PHASE_ICON[pid];
-                return (
-                  <div key={pid} style={{
-                    marginBottom: idx === arr.length - 1 ? 0 : "10px",
-                    pageBreakInside: "avoid",
-                  }}>
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: "8px",
-                      paddingBottom: "5px", borderBottom: `1px dashed ${PRINT.hitBorder}`,
-                      marginBottom: "5px",
-                    }}>
-                      <Icon size={12} color={PHASE_COLORS[pid]} />
-                      <strong style={{ fontSize: "10.5px", color: PRINT.text, flex: 1 }}>{phaseTitle}</strong>
-                      <span style={{ fontSize: "9.5px", color: PRINT.hitText, fontWeight: 600 }}>
-                        {rows.length} hit{rows.length === 1 ? "" : "s"}
-                      </span>
-                    </div>
-                    <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-                      {rows.slice(0, PRINT_LIST_MAX).map((h, i) => (
-                        <li key={i} style={{
-                          display: "grid", gridTemplateColumns: "auto 150px 1fr",
-                          gap: "10px", padding: "3px 0",
-                          color: PRINT.hitText, fontWeight: 500,
-                        }}>
-                          <span style={{
-                            width: "2px", height: "100%", borderRadius: "999px",
-                            background: PHASE_COLORS[pid],
-                          }} />
-                          <span style={{
-                            fontSize: "8.5px", textTransform: "uppercase",
-                            letterSpacing: "0.08em", color: PRINT.muted,
-                            fontWeight: 600, paddingTop: "1px",
-                          }}>
-                            {h.section || "—"}
-                          </span>
-                          <span style={{ wordBreak: "break-word" }}>{h.text}</span>
-                        </li>
-                      ))}
-                      {rows.length > PRINT_LIST_MAX && (
-                        <li style={{
-                          padding: "4px 0", fontSize: "9px",
-                          color: PRINT.muted, fontStyle: "italic",
-                        }}>
-                          … and {rows.length - PRINT_LIST_MAX} more — see detailed phase below
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                );
-              })}
+            <Crosshair size={12} color={PRINT.hitText} />
+            <strong style={{ fontSize: "11px", color: PRINT.text, letterSpacing: "-0.005em" }}>
+              Hits index
+            </strong>
+            <span style={{ fontSize: "9px", color: PRINT.muted, flex: 1 }}>
+              {flatHits.length} sensitive finding{flatHits.length === 1 ? "" : "s"} · {hitsByPhase.size} phase{hitsByPhase.size === 1 ? "" : "s"}
+            </span>
           </div>
-        </section>
+          {orderedHits.map(([pid, { phaseTitle, rows }], idx) => {
+            const Icon = PHASE_ICON[pid];
+            return (
+              <div
+                key={pid}
+                style={{
+                  marginTop: idx === 0 ? 0 : "6px",
+                  paddingTop: idx === 0 ? 0 : "6px",
+                  borderTop: idx === 0 ? "none" : `1px dashed ${PRINT.hitBorder}`,
+                  pageBreakInside: "avoid",
+                }}
+              >
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px",
+                }}>
+                  <Icon size={10} color={PHASE_COLORS[pid]} />
+                  <strong style={{ fontSize: "10px", color: PRINT.text }}>{phaseTitle}</strong>
+                  <span style={{
+                    fontSize: "9px", color: PRINT.hitText, fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
+                  }}>
+                    · {rows.length}
+                  </span>
+                </div>
+                <ul style={{ margin: 0, padding: "0 0 0 16px", listStyle: "none" }}>
+                  {rows.slice(0, PRINT_LIST_MAX).map((h, i) => (
+                    <li
+                      key={i}
+                      style={{
+                        position: "relative",
+                        padding: "1px 0",
+                        color: PRINT.hitText, fontWeight: 500,
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      <span style={{
+                        position: "absolute", left: "-10px", top: "6px",
+                        width: "3px", height: "3px", borderRadius: "999px",
+                        background: PRINT.hitDot,
+                      }} />
+                      <span style={{
+                        fontSize: "8.5px", letterSpacing: "0.06em",
+                        textTransform: "uppercase", color: PRINT.muted,
+                        marginRight: "8px", fontWeight: 700,
+                      }}>
+                        {h.section || "—"}
+                      </span>
+                      {h.text}
+                    </li>
+                  ))}
+                  {rows.length > PRINT_LIST_MAX && (
+                    <li style={{
+                      fontSize: "9px", color: PRINT.subtle, fontStyle: "italic", padding: "2px 0",
+                    }}>
+                      … and {rows.length - PRINT_LIST_MAX} more — see detail below
+                    </li>
+                  )}
+                </ul>
+              </div>
+            );
+          })}
+        </PrintGutterBlock>
       )}
 
-      {/* ===== DETAILED PHASES ===== */}
+      {/* === PHASE DETAIL — gutter-bar layout, can break across pages === */}
       <section>
         {phases.map((phase) => {
           const c = phaseStats.get(phase.id) ?? { items: 0, hits: 0 };
@@ -2350,120 +2290,81 @@ function PrintReport({
           return (
             <article
               key={phase.id}
-              className="pv-avoid-break"
               style={{
-                marginBottom: "10px",
-                pageBreakInside: "avoid",
-                breakInside: "avoid-page" as const,
-                background: `linear-gradient(180deg, ${PRINT.surfaceWarm}, ${PRINT.surface})`,
-                border: `1px solid ${PRINT.border}`,
-                borderRadius: "12px",
-                overflow: "hidden",
-                // `content-visibility: auto` lets the browser skip layout +
-                // paint of offscreen phase blocks until they scroll/paginate
-                // into view. With ~12 phases, this cuts the initial mount
-                // cost substantially in Chromium-based browsers.
-                contentVisibility: "auto" as unknown as undefined,
-                containIntrinsicSize: "1px 800px",
+                marginTop: "10px",
+                paddingLeft: "11px",
+                borderLeft: `2px solid ${PHASE_COLORS[phase.id]}`,
               }}
             >
-              <div style={{
-                display: "flex", alignItems: "center", gap: "11px",
-                padding: "10px 14px",
-                borderBottom: `1px solid ${PRINT.border}`,
-                background: `linear-gradient(180deg, rgba(255,255,255,0.025), transparent)`,
-              }}>
-                <div style={{
-                  width: "26px", height: "26px", borderRadius: "7px",
-                  background: `${PHASE_COLORS[phase.id]}22`,
-                  border: `1px solid ${PHASE_COLORS[phase.id]}33`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
+              <header
+                style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  marginBottom: "6px", pageBreakAfter: "avoid",
+                }}
+              >
+                <Icon size={12} color={PHASE_COLORS[phase.id]} />
+                <h3 style={{
+                  fontSize: "12px", fontWeight: 700, margin: 0,
+                  letterSpacing: "-0.005em", color: PRINT.text,
                 }}>
-                  <Icon size={13} color={PHASE_COLORS[phase.id]} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <h3 style={{
-                    fontSize: "12.5px", fontWeight: 700, margin: 0,
-                    letterSpacing: "-0.01em", color: PRINT.text,
-                  }}>
-                    {phase.title}
-                  </h3>
-                  <div style={{ fontSize: "9px", color: PRINT.muted, marginTop: "1px" }}>
-                    {phase.sections.length} section{phase.sections.length === 1 ? "" : "s"} · {c.items} item{c.items === 1 ? "" : "s"}
-                  </div>
-                </div>
+                  {phase.title}
+                </h3>
+                <span style={{
+                  fontSize: "9px", color: PRINT.muted,
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  {phase.sections.length} section{phase.sections.length === 1 ? "" : "s"} · {c.items} item{c.items === 1 ? "" : "s"}
+                </span>
+                <span style={{ flex: 1 }} />
                 {c.hits > 0 && (
-                  <div style={{
-                    display: "inline-flex", alignItems: "center", gap: "4px",
-                    padding: "2px 7px", borderRadius: "6px",
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: "3px",
+                    padding: "1px 6px", borderRadius: "5px",
                     background: "rgba(239, 68, 68, 0.12)",
                     border: `1px solid ${PRINT.hitBorder}`,
-                    color: PRINT.hitText, fontSize: "9.5px", fontWeight: 700,
+                    color: PRINT.hitText, fontSize: "9px", fontWeight: 700,
                     fontVariantNumeric: "tabular-nums",
                   }}>
-                    <Crosshair size={9} /> {c.hits}
-                  </div>
+                    <Crosshair size={8} /> {c.hits}
+                  </span>
                 )}
-              </div>
-              <div style={{ padding: "10px 14px" }}>
-                {phase.sections.length === 0 ? (
-                  <div style={{ color: PRINT.subtle, fontStyle: "italic" }}>(no items)</div>
-                ) : (
-                  phase.sections.map((sec, i) => (
-                    <div key={i} style={{
-                      marginBottom: i === phase.sections.length - 1 ? 0 : "11px",
+              </header>
+
+              {phase.sections.length === 0 ? (
+                <div style={{ color: PRINT.subtle, fontStyle: "italic", paddingBottom: "4px" }}>
+                  (no items)
+                </div>
+              ) : (
+                phase.sections.map((sec, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      marginTop: i === 0 ? 0 : "8px",
                       pageBreakInside: "avoid",
-                    }}>
-                      {sec.title && <PrintEyebrow>{sec.title}</PrintEyebrow>}
-                      <div style={{ marginTop: sec.title ? "5px" : 0 }}>
-                        {sec.items.map((it, j) => <PrintItem key={j} item={it} />)}
-                      </div>
+                    }}
+                  >
+                    {sec.title && <PrintEyebrow>{sec.title}</PrintEyebrow>}
+                    <div style={{ marginTop: sec.title ? "3px" : 0 }}>
+                      {sec.items.map((it, j) => <PrintItem key={j} item={it} />)}
                     </div>
-                  ))
-                )}
-              </div>
+                  </div>
+                ))
+              )}
             </article>
           );
         })}
       </section>
 
-      {/* ===== FOOTER ===== */}
       <footer style={{
-        marginTop: "20px", paddingTop: "12px",
-        borderTop: `1px solid ${PRINT.border}`,
-        fontSize: "9px", color: PRINT.subtle,
+        marginTop: "16px", paddingTop: "8px",
+        borderTop: `1px dashed ${PRINT.border}`,
+        fontSize: "8.5px", color: PRINT.subtle,
         display: "flex", justifyContent: "space-between",
         letterSpacing: "0.04em",
       }}>
-        <span>recon.sh · passive OSINT · zero active probing</span>
+        <span>recon.sh · passive OSINT · {scanMeta?.domain ?? "—"}</span>
         <span style={{ fontVariantNumeric: "tabular-nums" }}>{dateStr}</span>
       </footer>
-    </div>
-  );
-}
-
-function PrintCard({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{
-      background: `linear-gradient(180deg, ${PRINT.surfaceWarm}, ${PRINT.surface})`,
-      border: `1px solid ${PRINT.border}`,
-      borderRadius: "12px",
-      padding: "13px 14px",
-      pageBreakInside: "avoid",
-    }}>
-      {children}
-    </div>
-  );
-}
-
-function PrintCardTitle({ title, hint }: { title: string; hint?: string }) {
-  return (
-    <div style={{
-      display: "flex", alignItems: "baseline", justifyContent: "space-between",
-      marginBottom: "10px",
-    }}>
-      <div style={{ fontSize: "11.5px", fontWeight: 700, color: PRINT.text }}>{title}</div>
-      {hint && <div style={{ fontSize: "9px", color: PRINT.subtle }}>{hint}</div>}
     </div>
   );
 }
@@ -2471,7 +2372,7 @@ function PrintCardTitle({ title, hint }: { title: string; hint?: string }) {
 function PrintEyebrow({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      fontSize: "9px", letterSpacing: "0.14em",
+      fontSize: "8.5px", letterSpacing: "0.14em",
       textTransform: "uppercase", color: PRINT.muted,
       fontWeight: 700,
     }}>
@@ -2480,52 +2381,59 @@ function PrintEyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PrintKpi({ label, value, accent, valueColor, glow }: {
-  label: string; value: string | number;
-  accent: string; valueColor?: string; glow?: boolean;
-}) {
+function PrintMetric({
+  label, value, accent, dot,
+}: { label: string; value: string | number; accent?: string; dot?: string }) {
   return (
-    <div style={{
-      position: "relative",
-      background: `linear-gradient(180deg, ${PRINT.surfaceWarm}, ${PRINT.surface})`,
-      border: `1px solid ${PRINT.border}`,
-      borderRadius: "12px",
-      padding: "12px 14px",
-      overflow: "hidden",
+    <span style={{
+      display: "inline-flex", alignItems: "baseline", gap: "6px",
+      padding: "4px 10px", borderRadius: "8px",
+      background: PRINT.surface, border: `1px solid ${PRINT.border}`,
+      fontVariantNumeric: "tabular-nums",
     }}>
-      {/* Corner accent glow — mirrors the dashboard Kpi tile */}
-      <div style={{
-        position: "absolute", top: "-30px", right: "-30px",
-        width: "90px", height: "90px", borderRadius: "999px",
-        background: accent, opacity: glow ? 0.28 : 0.16,
-        filter: "blur(24px)", pointerEvents: "none",
-      }} />
-      <div style={{ position: "relative" }}>
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          marginBottom: "6px",
-        }}>
-          <span style={{
-            fontSize: "8.5px", letterSpacing: "0.14em", textTransform: "uppercase",
-            color: PRINT.muted, fontWeight: 700,
-          }}>
-            {label}
-          </span>
-          <span style={{
-            width: "6px", height: "6px", borderRadius: "999px", background: accent,
-          }} />
-        </div>
-        <div style={{
-          fontSize: "26px", fontWeight: 700,
-          color: valueColor ?? PRINT.text,
-          fontVariantNumeric: "tabular-nums",
-          letterSpacing: "-0.02em",
-          lineHeight: 1.1,
-        }}>
-          {value}
-        </div>
-      </div>
-    </div>
+      {dot && (
+        <span style={{
+          width: "5px", height: "5px", borderRadius: "999px",
+          background: dot, alignSelf: "center",
+        }} />
+      )}
+      <span style={{
+        fontSize: "8.5px", letterSpacing: "0.14em", color: PRINT.muted,
+        textTransform: "uppercase", fontWeight: 700,
+      }}>
+        {label}
+      </span>
+      <strong style={{
+        fontSize: "12px", color: accent ?? PRINT.text, fontWeight: 700,
+        letterSpacing: "-0.01em",
+      }}>
+        {value}
+      </strong>
+    </span>
+  );
+}
+
+function PrintGutterBlock({
+  color, accentTint, children,
+}: { color: string; accentTint?: boolean; children: React.ReactNode }) {
+  return (
+    <section
+      style={{
+        marginTop: "10px",
+        padding: "10px 12px 10px 11px",
+        borderLeft: `2px solid ${color}`,
+        background: accentTint
+          ? `linear-gradient(180deg, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.015))`
+          : `linear-gradient(180deg, ${PRINT.surfaceWarm}, ${PRINT.surface})`,
+        border: `1px solid ${accentTint ? PRINT.hitBorder : PRINT.border}`,
+        borderLeftWidth: "2px",
+        borderLeftColor: color,
+        borderRadius: "0 8px 8px 0",
+        pageBreakInside: "avoid",
+      }}
+    >
+      {children}
+    </section>
   );
 }
 
