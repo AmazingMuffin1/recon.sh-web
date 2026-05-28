@@ -942,10 +942,6 @@ export default function Home() {
 
   // Report download — bypasses the browser print preview entirely.
   //
-  // Flow:  click Download → mount print DOM offscreen → html2canvas captures
-  //        the print-view as a series of images → jsPDF stitches them into a
-  //        multi-page PDF → trigger a blob download as recon-{domain}-{date}.pdf.
-  // No browser print dialog appears.
   const [printMounted, setPrintMounted] = useState(false);
   const [printPreparing, setPrintPreparing] = useState(false);
   const [printError, setPrintError] = useState<string | null>(null);
@@ -957,50 +953,62 @@ export default function Home() {
     setPrintPreparing(true);
     setPrintMounted(true);
 
-    // Two frames so React commits + layout settles before we screenshot.
-    await new Promise<void>((res) => requestAnimationFrame(() => requestAnimationFrame(() => res())));
+    await new Promise<void>((res) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => res()))
+    );
 
     try {
       const root = printHostRef.current?.querySelector(".print-view") as HTMLElement | null;
       if (!root) throw new Error("Report DOM not ready — try again in a moment.");
 
-      // Dynamic imports so the PDF libs (~250 KB) load only on first click.
       const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
         import("html2canvas"),
         import("jspdf"),
       ]);
 
+      // Render at 2.5× DPI. Source width is set on the offscreen host
+      // (~820px), so the canvas comes out at ~2050px — sharp on A4.
+      const SCALE = 2.5;
       const canvas = await html2canvas(root, {
         backgroundColor: "#0a0c12",
-        scale: 2,                    // 2× DPI for sharper text
+        scale: SCALE,
         useCORS: true,
         logging: false,
-        windowWidth: 1180,
+        windowWidth: PRINT_HOST_WIDTH_PX,
+        width: PRINT_HOST_WIDTH_PX,
+        height: root.scrollHeight,
       });
 
       if (canvas.width === 0 || canvas.height === 0) {
         throw new Error("Capture produced an empty canvas — please retry.");
       }
 
-      // A4 portrait: 210 × 297 mm. Render the canvas at full page width and
-      // slice into pages by translating the vertical offset.
       const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const imgW = pageW;
-      const imgH = (canvas.height * imgW) / canvas.width;
+      const A4_W_MM = pdf.internal.pageSize.getWidth();
+      const A4_H_MM = pdf.internal.pageSize.getHeight();
+      const pxPerMm = canvas.width / A4_W_MM;
+      const pageHpx = Math.floor(A4_H_MM * pxPerMm);
+      const totalPages = Math.max(1, Math.ceil(canvas.height / pageHpx));
 
-      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      for (let i = 0; i < totalPages; i++) {
+        const sourceY = i * pageHpx;
+        const sliceH = Math.min(pageHpx, canvas.height - sourceY);
 
-      let heightLeft = imgH;
-      let position = 0;
-      pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-      heightLeft -= pageH;
-      while (heightLeft > 0) {
-        position = heightLeft - imgH;     // negative offset shifts the image up
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-        heightLeft -= pageH;
+        const slice = document.createElement("canvas");
+        slice.width = canvas.width;
+        slice.height = sliceH;
+        const ctx = slice.getContext("2d");
+        if (!ctx) throw new Error("Canvas slicing failed.");
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.fillStyle = "#0a0c12";
+        ctx.fillRect(0, 0, slice.width, slice.height);
+        ctx.drawImage(canvas, 0, sourceY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+
+        const sliceDataUrl = slice.toDataURL("image/jpeg", 0.95);
+        const sliceH_mm = sliceH / pxPerMm;
+        if (i > 0) pdf.addPage();
+        pdf.addImage(sliceDataUrl, "JPEG", 0, 0, A4_W_MM, sliceH_mm, undefined, "FAST");
       }
 
       const safeDomain = (scanMeta?.domain ?? "report").replace(/[^a-z0-9.-]/gi, "_");
@@ -1009,7 +1017,6 @@ export default function Home() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       setPrintError(msg);
-      // Auto-clear so a transient failure doesn't pin a banner forever.
       setTimeout(() => setPrintError(null), 6000);
       console.error("[recon.sh] PDF export failed:", err);
     } finally {
@@ -1704,7 +1711,7 @@ export default function Home() {
             position: "absolute",
             left: "-100000px",
             top: 0,
-            width: "1180px",
+            width: `${PRINT_HOST_WIDTH_PX}px`,
             pointerEvents: "none",
           }}
         >
@@ -1951,6 +1958,11 @@ const PRINT = {
 };
 
 const PRINT_LIST_MAX = 20; // cap items in any list to keep PDF readable + fast
+
+// Width of the offscreen print host. Chosen so that 1 source px maps to ~0.26mm
+// on the A4 page (210mm / 820px ≈ 0.256), keeping body text at a readable
+// ~8pt in the final PDF without redesigning every PRINT style.
+const PRINT_HOST_WIDTH_PX = 820;
 
 // Hot style objects — lifted to module scope so React doesn't re-allocate them
 // on every PrintItem render. With 500+ items in a typical scan, this is a

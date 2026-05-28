@@ -22,8 +22,6 @@ html, body {
   color: #e7e9ef;
   font-feature-settings: "ss01", "cv11";
   min-height: 100%;
-  /* Prevent horizontal scroll from any oversized children on narrow screens. */
-  overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
 }
 

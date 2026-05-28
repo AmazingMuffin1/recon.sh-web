@@ -19,15 +19,10 @@ export const metadata: Metadata = {
   description: "Passive OSINT recon with live streaming results and cross-phase hit indexing.",
 };
 
-// Mobile rendering: without this, iOS Safari and Android Chrome render the
-// page at 980px wide and scale down, making every UI element tiny and
-// unusable on phones. `viewportFit: "cover"` opts the page into the
-// safe-area-inset CSS env() values so we can avoid the notch / home-indicator
-// strip without losing edge-to-edge dark background.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
+  userScalable: true,
   viewportFit: "cover",
   themeColor: "#06070b",
 };

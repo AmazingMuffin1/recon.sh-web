@@ -60,6 +60,50 @@ import { pMap } from "./http";
 const isDomain = (s: string) =>
   /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i.test(s);
 
+// Apexes that show up as NS/MX or contact-email domains but are infrastructure
+// providers, not sibling brands. Used by the Domain Pivot phase to suppress
+// noise. Conservative list — only includes apexes that are demonstrably
+// "someone else's platform".
+const THIRD_PARTY_PROVIDER_APEXES = new Set<string>([
+  // CDNs / hosting
+  "cloudflare.com", "cloudflare.net", "cloudflarenet.com",
+  "akamai.net", "akamaiedge.net", "akamaitechnologies.com",
+  "fastly.net", "fastlylb.net",
+  "amazonaws.com", "aws.com", "awsdns-00.com", "awsdns-01.com",
+  "awsdns-02.com", "awsdns-03.com",
+  "digitalocean.com", "linode.com", "rackspace.com",
+  "ovh.net", "ovh.com",
+  // Registrars / DNS providers
+  "godaddy.com", "domaincontrol.com", "secureserver.net",
+  "registrar-servers.com", "namecheaphosting.com", "namecheap.com",
+  "name.com", "dynadot.com", "gandi.net", "dreamhost.com",
+  "registrar.amazon",
+  "hostinger.com", "bluehost.com", "siteground.net",
+  // Big-tech infra
+  "google.com", "googledomains.com", "googleapis.com", "googleusercontent.com",
+  "microsoft.com", "microsoftonline.com", "outlook.com", "office365.com",
+  "live.com", "msn.com",
+  // Transactional mail
+  "mailgun.org", "mailgun.net", "mandrillapp.com", "mailchimp.com",
+  "sendgrid.net", "sendgrid.com", "sparkpostmail.com", "postmarkapp.com",
+  // Misc infra
+  "zoho.com", "protonmail.ch", "fastmail.com", "iana.org",
+]);
+
+// Free webmail services — never a useful ownership pivot.
+const FREE_MAIL_APEXES = new Set<string>([
+  "gmail.com", "googlemail.com",
+  "yahoo.com", "ymail.com", "yahoo.co.uk", "yahoo.co.jp",
+  "hotmail.com", "outlook.com", "live.com", "msn.com",
+  "proton.me", "protonmail.com",
+  "icloud.com", "me.com", "mac.com",
+  "aol.com",
+  "mail.com", "mail.ru",
+  "yandex.com", "yandex.ru",
+  "gmx.com", "gmx.net", "gmx.de",
+  "zoho.com", "fastmail.com",
+]);
+
 const ghSearchUrl = (q: string) =>
   `https://github.com/search?q=${encodeURIComponent(q)}&type=code`;
 
@@ -134,6 +178,10 @@ export async function runScan(
   // Registrant organisation pulled out of RDAP — used by the Domain Pivot
   // phase to find sibling certs issued to the same legal entity.
   let registrantOrg: string | undefined;
+  // Apex of any non-target email seen in RDAP contacts (e.g. registrant
+  // emails on a corporate brand domain). The Domain Pivot phase treats this
+  // as a strong sibling-domain candidate.
+  const registrantEmailDomains = new Set<string>();
 
   send({ type: "phase", id: "meta", title: "Overview" });
   send({ type: "banner", text: `Passive OSINT: ${domain} — ${new Date().toISOString()}` });
@@ -187,10 +235,23 @@ export async function runScan(
     // the consolidated set; the rest is shown for context only. Contact
     // names also feed the email-permutation generator below.
     for (const c of rdap.contacts) {
-      if (c.email) extractEmails(c.email);
+      if (c.email) {
+        extractEmails(c.email);
+        const at = c.email.lastIndexOf("@");
+        if (at > 0) {
+          const emailDomain = c.email.slice(at + 1).trim().toLowerCase();
+          if (
+            emailDomain &&
+            /^[a-z0-9.-]+\.[a-z]{2,}$/.test(emailDomain) &&
+            emailDomain !== domain &&
+            !emailDomain.endsWith(`.${domain}`)
+          ) {
+            registrantEmailDomains.add(emailDomain);
+          }
+        }
+      }
       if (c.name && c.name.length > 1 && c.name.length < 80) harvestedNames.add(c.name);
     }
-    // Cache the registrant organisation for the Domain Pivot phase below.
     const registrant = rdap.contacts.find((c) => /registrant/i.test(c.role ?? "")) ?? rdap.contacts[0];
     registrantOrg = registrant?.org || registrant?.name || undefined;
   }
@@ -1417,14 +1478,14 @@ export async function runScan(
     type: "line",
     text:
       "  Goal: starting from this domain, find OTHER domains likely owned by the same person / company. " +
-      "All passive — crt.sh by registrant org, shared nameservers/MX in the resolved data, " +
+      "All passive — registrant org/email, shared nameservers/MX after filtering known providers, " +
       "and reverse-DNS hostnames Shodan already collected.",
   });
 
   // -- (a) crt.sh org-name lookup -------------------------------------------
   send({ type: "section", text: "Sibling domains via crt.sh organisation search" });
   if (!registrantOrg) {
-    send({ type: "line", text: "  (RDAP did not return a registrant organisation — try a WHOIS-via-key source like WhoisXMLAPI for redacted records)" });
+    send({ type: "line", text: "  (RDAP did not return a registrant organisation — try a WHOIS-via-key source like WhoisXMLAPI for redacted records, or check the email-domain pivot below)" });
   } else {
     send({ type: "kv", key: "Querying org", value: registrantOrg });
     const siblings = await crtshByOrg(registrantOrg, domain).catch(() => []);
@@ -1439,25 +1500,47 @@ export async function runScan(
     }
   }
 
+  // -- (a2) Registrant email-domain pivot -----------------------------------
+  // When RDAP exposes a contact email on a different apex (e.g.
+  // `admin@example-holdings.com`), that apex is itself a very strong sibling
+  // candidate. We surface it even when GDPR has redacted everything else.
+  if (registrantEmailDomains.size) {
+    send({ type: "section", text: "Sibling domain from RDAP contact emails" });
+    const items = [...registrantEmailDomains]
+      .filter((d) => !THIRD_PARTY_PROVIDER_APEXES.has(d) && !FREE_MAIL_APEXES.has(d))
+      .sort();
+    if (items.length) {
+      emitHitFound(send, `${items.length} apex(es) seen as the @-domain on RDAP contact emails`);
+      send({ type: "list", items, hits: items });
+      send({ type: "line", text: "  ✓ Contact emails on a non-target domain are a strong ownership signal — the apex is almost always operated by the same entity." });
+    } else {
+      send({ type: "line", text: "  (all contact email apexes were free-mail providers — no pivot signal)" });
+    }
+  }
+
   // -- (b) Shared nameserver / MX pivot -------------------------------------
-  // Public-facing nameservers and MX hosts often live under the registrant's
-  // own domain — when they do, we surface that apex as a strong pivot candidate.
-  send({ type: "section", text: "Shared-infrastructure pivots (NS / MX apex)" });
+  // Filter known DNS / mail providers so we don't surface cloudflare.com or
+  // outlook.com as "siblings" — those are noise, not ownership signal.
+  send({ type: "section", text: "Shared-infrastructure pivots (NS / MX apex, providers filtered)" });
   const infraApexes = new Set<string>();
-  for (const ns of nsList) {
-    const apex = ns.split(".").slice(-2).join(".").toLowerCase();
-    if (apex && apex !== domain && !apex.endsWith(`.${domain}`)) infraApexes.add(apex);
-  }
-  for (const mx of mxParsed) {
-    const apex = mx.host.split(".").slice(-2).join(".").toLowerCase();
-    if (apex && apex !== domain && !apex.endsWith(`.${domain}`)) infraApexes.add(apex);
-  }
+  const providerApexes = new Set<string>();
+  const collectApex = (host: string) => {
+    const apex = host.split(".").slice(-2).join(".").toLowerCase();
+    if (!apex || apex === domain || apex.endsWith(`.${domain}`)) return;
+    if (THIRD_PARTY_PROVIDER_APEXES.has(apex)) providerApexes.add(apex);
+    else infraApexes.add(apex);
+  };
+  for (const ns of nsList) collectApex(ns);
+  for (const mx of mxParsed) collectApex(mx.host);
+
   if (infraApexes.size) {
     const lines = [...infraApexes].sort().map((a) => `${a}  (from NS or MX records)`);
     send({ type: "list", items: lines, hits: lines });
-    send({ type: "line", text: "  ⚠ These may be third-party providers (Cloudflare, Google, etc.) rather than sibling brands — verify before treating as a pivot." });
+    send({ type: "line", text: "  ✓ These apexes are not on the known-provider denylist — likely sibling infrastructure, but still worth verifying manually." });
+  } else if (providerApexes.size) {
+    send({ type: "line", text: `  (NS / MX point only at known providers: ${[...providerApexes].sort().join(", ")} — no infra pivot)` });
   } else {
-    send({ type: "line", text: "  (NS / MX are all third-party or under the target apex — no infra pivot)" });
+    send({ type: "line", text: "  (NS / MX are all under the target apex — no infra pivot)" });
   }
 
   // -- (c) Reverse-DNS neighbours (other domains sharing apex IPs) ----------
