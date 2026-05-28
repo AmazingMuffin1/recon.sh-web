@@ -1008,7 +1008,41 @@ export default function Home() {
         const sliceDataUrl = slice.toDataURL("image/jpeg", 0.95);
         const sliceH_mm = sliceH / pxPerMm;
         if (i > 0) pdf.addPage();
+
+        // Paint the whole page with the website's bg first, so any
+        // leftover area below the image (when the last slice doesn't
+        // fill a full page) shows the dark colour instead of white.
+        pdf.setFillColor(10, 12, 18);
+        pdf.rect(0, 0, A4_W_MM, A4_H_MM, "F");
         pdf.addImage(sliceDataUrl, "JPEG", 0, 0, A4_W_MM, sliceH_mm, undefined, "FAST");
+
+        // On the final (short) page, mark the empty area with a thin
+        // brand-gradient strip so it reads as intentional design, not
+        // bleed. Three flat colour segments approximate the
+        // cyan → violet → rose gradient used in the web header.
+        const tailMm = A4_H_MM - sliceH_mm;
+        if (i === totalPages - 1 && tailMm > 2) {
+          const stripY = sliceH_mm;
+          const stripH = 1.4;
+          const segW = A4_W_MM / 3;
+          pdf.setFillColor(34, 211, 238);
+          pdf.rect(0, stripY, segW, stripH, "F");
+          pdf.setFillColor(167, 139, 250);
+          pdf.rect(segW, stripY, segW, stripH, "F");
+          pdf.setFillColor(244, 63, 94);
+          pdf.rect(segW * 2, stripY, segW, stripH, "F");
+
+          if (tailMm > 30) {
+            pdf.setTextColor(100, 116, 139);
+            pdf.setFontSize(7.5);
+            pdf.text(
+              "recon.sh · passive OSINT · zero active probing",
+              A4_W_MM / 2,
+              sliceH_mm + tailMm / 2,
+              { align: "center" }
+            );
+          }
+        }
       }
 
       const safeDomain = (scanMeta?.domain ?? "report").replace(/[^a-z0-9.-]/gi, "_");
