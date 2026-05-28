@@ -1028,12 +1028,7 @@ export default function Home() {
       <main className="screen-view min-h-screen flex flex-col">
         {/* ============== HEADER ============== */}
         <header className="sticky top-0 z-30 chrome border-b border-white/10 safe-px safe-pt">
-          {/* Two-row layout on mobile, single-row on md+. Row 1 is always the
-              brand + compact action buttons; row 2 is the domain form, with
-              the index search collapsing under it. On md+ everything flattens
-              into a single line via flex-wrap defaults. */}
           <div className="px-3 sm:px-5 py-2.5 sm:py-3 flex flex-wrap md:flex-nowrap items-center gap-2 sm:gap-3">
-            {/* Brand — click to return to home / start a new scan */}
             <button
               type="button"
               onClick={goHome}
@@ -1050,9 +1045,19 @@ export default function Home() {
               </div>
             </button>
 
-            {/* Action cluster — appears on the right of row 1 on mobile, and
-                between form/search on desktop via order tweaks below. */}
-            <div className="flex items-center gap-1.5 sm:gap-2 ml-auto md:order-3 shrink-0">
+            <div className="hidden lg:flex md:order-2 items-center gap-3 select-none pointer-events-none">
+              <span className="h-5 w-px bg-white/10" aria-hidden="true" />
+              <div className="font-mono text-[13px] tracking-tight">
+                <span className="text-neutral-500">{"//"}</span>{" "}
+                <span className="bg-gradient-to-r from-cyan-300 to-violet-300 bg-clip-text text-transparent font-semibold">
+                  recon.sh
+                </span>{" "}
+                <span className="text-neutral-500 italic">— indexed in real-time</span>
+              </div>
+              <span className="h-5 w-px bg-white/10" aria-hidden="true" />
+            </div>
+
+            <div className="flex items-center gap-1.5 sm:gap-2 ml-auto md:ml-0 md:order-5 shrink-0">
               <div className="hidden md:flex items-center rounded-xl border border-white/10 bg-white/5 overflow-hidden text-xs">
                 <button
                   onClick={() => setView("phases")}
@@ -1073,8 +1078,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Mobile-only view toggle: a single button that flips between
-                  Phases and Hits, with the hit count tucked on the right. */}
               <button
                 type="button"
                 onClick={() => setView(view === "phases" ? "hits" : "phases")}
@@ -1138,9 +1141,7 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Domain form — full width on mobile (wraps to row 2), shares
-                row with the rest on md+. */}
-            <form onSubmit={start} className="order-3 md:order-2 flex items-center gap-2 w-full md:flex-1 md:w-auto md:max-w-3xl">
+            <form onSubmit={start} className="order-3 md:order-3 flex items-center gap-2 w-full md:flex-1 md:w-auto md:max-w-3xl">
               <div className="relative flex-1 min-w-0">
                 <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
                 <input
@@ -1178,10 +1179,7 @@ export default function Home() {
               )}
             </form>
 
-            {/* Search / index — only shown once results exist on mobile (no
-                point indexing an empty page). On md+ it always renders so the
-                header layout doesn't jump when the first event arrives. */}
-            <div className={`order-4 md:order-2 relative w-full md:w-auto md:flex-1 md:max-w-2xl ${phases.length === 0 ? "hidden md:block" : ""}`}>
+            <div className={`order-4 md:order-4 relative w-full md:w-auto md:flex-1 md:max-w-2xl ${phases.length === 0 ? "hidden md:block" : ""}`}>
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
               <input
                 ref={searchRef}
@@ -1332,7 +1330,7 @@ export default function Home() {
                   <a href="/privacy" className="hover:text-white transition">Privacy</a>
                   <a href="/cookies" className="hover:text-white transition">Cookies</a>
                   <a
-                    href="https://github.com/"
+                    href="https://github.com/AmazingMuffin1/recon.sh-web"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white transition"

@@ -42,8 +42,16 @@ export default function PrivacyPage() {
             <p>
               recon.sh is an open-source project. The service is hosted at{" "}
               <a className="text-cyan-300 hover:text-cyan-200" href="https://recon-sh.com">https://recon-sh.com</a>.
-              The source code is publicly available on GitHub. For privacy-related questions
-              you can open an issue on the repository or email{" "}
+              The source code is publicly available at{" "}
+              <a
+                className="text-cyan-300 hover:text-cyan-200"
+                href="https://github.com/AmazingMuffin1/recon.sh-web"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                github.com/AmazingMuffin1/recon.sh-web
+              </a>
+              . For privacy-related questions you can open an issue on the repository or email{" "}
               <a className="text-cyan-300 hover:text-cyan-200" href="mailto:privacy@recon-sh.com">privacy@recon-sh.com</a>.
             </p>
           </Section>
@@ -100,14 +108,65 @@ export default function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="Hosting">
+          <Section title="Hosting and infrastructure processor">
             <p>
-              The site is hosted on Vercel. Vercel may log standard request metadata
-              (timestamp, request path, response status, user-agent, client IP) at the
-              infrastructure level — this is outside our control and follows{" "}
-              <a className="text-cyan-300 hover:text-cyan-200" href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Vercel&apos;s privacy policy</a>.
-              We do not query, export, or otherwise use those logs to build a profile of
+              The site is hosted on Vercel Inc. As an infrastructure provider, Vercel
+              processes standard request metadata at the platform level — timestamp,
+              request path, response status, user-agent, and the client IP address that
+              connected to its edge network — for the purposes of routing traffic,
+              capacity planning, abuse detection, and incident response. We have not
+              instrumented any additional logging on top of that; we do not query,
+              export, ship to a SIEM, or otherwise use those logs to build a profile of
               you.
+            </p>
+            <p>
+              Vercel acts as a <em>processor</em> for the personal data it handles on
+              our behalf. The terms governing that relationship — including the security
+              measures Vercel applies, the categories of data processed, and the
+              applicable retention periods — are set out in Vercel&apos;s Data Processing
+              Addendum, which we have entered into by operating on the platform. The
+              authoritative documents are linked below; if Vercel updates them, the
+              linked version is what applies.
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                <a
+                  className="text-cyan-300 hover:text-cyan-200"
+                  href="https://vercel.com/legal/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Vercel Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a
+                  className="text-cyan-300 hover:text-cyan-200"
+                  href="https://vercel.com/legal/dpa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Vercel Data Processing Addendum (DPA)
+                </a>{" "}
+                — incorporates the EU Standard Contractual Clauses for transfers outside
+                the EEA/UK; specifies log retention windows.
+              </li>
+              <li>
+                <a
+                  className="text-cyan-300 hover:text-cyan-200"
+                  href="https://vercel.com/legal/subprocessors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Vercel Subprocessor List
+                </a>
+              </li>
+            </ul>
+            <p className="text-xs text-neutral-500">
+              In short: Vercel keeps platform logs only as long as their published
+              retention period requires, we add no logging of our own, and the
+              authoritative figures live in the documents above rather than being
+              restated (and potentially going stale) here.
             </p>
           </Section>
 
@@ -124,13 +183,38 @@ export default function PrivacyPage() {
 
           <Section title="Your rights">
             <p>
-              Because we do not maintain identified records of users, most data-subject
-              rights (access, rectification, erasure, portability, restriction) have nothing
-              to act on — there is no profile of you to retrieve, correct, or export. You
-              can nonetheless contact{" "}
+              The GDPR gives you the following rights. Because we do not maintain
+              identified records of users, several of them have nothing concrete to act
+              on for the data we process — we list them all explicitly so you can see
+              that and exercise any that apply.
+            </p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>
+                <strong className="text-white">Access (Art. 15)</strong>, <strong className="text-white">rectification (Art. 16)</strong>, <strong className="text-white">erasure (Art. 17)</strong>, <strong className="text-white">portability (Art. 20)</strong>, <strong className="text-white">restriction (Art. 18)</strong> — there is no stored profile of you to retrieve, correct, export, delete, or restrict. The only personal data we ever touch (your IP and the domain you submitted) is processed in memory for the duration of a single request and is not retained by us afterwards. Vercel platform logs are addressed in the Hosting section above and are subject to their DPA.
+              </li>
+              <li>
+                <strong className="text-white">Right to object (Art. 21)</strong> — you may object at any time to processing carried out on legitimate-interest grounds. The only such processing we perform is short-lived rate-limiting that uses your IP address to prevent abuse. Because preventing fraud and securing the service are themselves recognised by the GDPR as compelling legitimate interests (Recital 47, 49), we may continue that specific processing where strictly necessary to protect the service; you can in any case stop all processing immediately by not submitting further scans, or write to <a className="text-cyan-300 hover:text-cyan-200" href="mailto:privacy@recon-sh.com">privacy@recon-sh.com</a> and we will discuss your specific situation.
+              </li>
+              <li>
+                <strong className="text-white">Withdraw consent (Art. 7(3))</strong> — for the only consent-based processing we perform (API keys you paste into Settings), you withdraw consent simply by clearing the field or closing the tab. We cannot retain those keys against your wishes because we never wrote them anywhere persistent in the first place.
+              </li>
+              <li>
+                <strong className="text-white">Lodge a complaint</strong> — you always have the right to complain to your local supervisory authority (the ICO in the UK, the CNIL in France, the AEPD in Spain, etc.). You do not need to contact us first.
+              </li>
+            </ul>
+            <p>
+              For any of the above, write to{" "}
               <a className="text-cyan-300 hover:text-cyan-200" href="mailto:privacy@recon-sh.com">privacy@recon-sh.com</a>{" "}
-              if you have any question, and you always have the right to lodge a complaint
-              with your local data-protection authority.
+              or open an issue on the{" "}
+              <a
+                className="text-cyan-300 hover:text-cyan-200"
+                href="https://github.com/AmazingMuffin1/recon.sh-web"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub repository
+              </a>
+              .
             </p>
           </Section>
 
