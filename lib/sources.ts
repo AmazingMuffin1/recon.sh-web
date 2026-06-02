@@ -1,5 +1,9 @@
 import { fetchJson, fetchText, fetchWithTimeout } from "./http";
-import { ONION_RE } from "./patterns";
+import {
+  EMAIL_HARVEST_MAX_CHARS,
+  emailRegexFor,
+  ONION_RE,
+} from "./patterns";
 
 // ---------- Helpers ----------
 
@@ -655,13 +659,12 @@ export async function skymemEmails(domain: string): Promise<string[]> {
     }
   );
   if (!html) return [];
-  const escDomain = domain.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const re = new RegExp(
-    `[a-zA-Z0-9._%+\\-]+@(?:[a-zA-Z0-9-]+\\.)*${escDomain}\\b`,
-    "gi"
-  );
+  const re = emailRegexFor(domain);
+  const slice = html.length > EMAIL_HARVEST_MAX_CHARS
+    ? html.slice(0, EMAIL_HARVEST_MAX_CHARS)
+    : html;
   const out = new Set<string>();
-  for (const m of html.matchAll(re)) out.add(m[0].toLowerCase());
+  for (const m of slice.matchAll(re)) out.add(m[0].toLowerCase());
   return [...out].sort();
 }
 

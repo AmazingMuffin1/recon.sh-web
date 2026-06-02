@@ -10,19 +10,16 @@ export const SENSITIVE_PARAM =
 
 export const ONION_RE = /[a-z2-7]{16,56}\.onion/gi;
 
-/**
- * Build a regex matching emails whose host is `domain` OR a subdomain of it.
- *
- * The earlier version required `[a-zA-Z0-9.-]+\.${domain}` — i.e. *at least one*
- * subdomain label — which silently skipped the most common case: `info@apex.com`.
- * The `(?:[a-zA-Z0-9-]+\.)*` makes the subdomain prefix optional, and the
- * trailing `\b` prevents matches like `…@evilexample.commit` from sneaking in
- * via greedy backtracking.
- */
+// ReDoS hardening: cap any blob fed into emailRegexFor / .matchAll.
+export const EMAIL_HARVEST_MAX_CHARS = 16 * 1024;
+
+// Bounded quantifiers turn the previously polynomial-backtrack shape into
+// linear-time scanning. RFC limits: local ≤64, label ≤63; we cap subdomain
+// depth at 10 labels.
 export function emailRegexFor(domain: string): RegExp {
   const escaped = domain.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(
-    `[a-zA-Z0-9._%+\\-]+@(?:[a-zA-Z0-9-]+\\.)*${escaped}\\b`,
+    `[a-zA-Z0-9._%+\\-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\\.){0,10}${escaped}\\b`,
     "gi"
   );
 }

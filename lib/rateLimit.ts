@@ -92,5 +92,9 @@ export function clientKey(req: Request): string {
     const real = sanitizeIp(headers.get("x-real-ip") ?? "");
     if (real) return real;
   }
-  return "shared";
+  // No reliable per-client identifier. Bucket by coarse UA so self-hosters
+  // without a trusted proxy don't collapse all clients into a single bucket
+  // that any single abuser can exhaust. Global limit still applies on top.
+  const ua = (headers.get("user-agent") ?? "").slice(0, 96);
+  return ua ? `ua:${ua}` : "shared";
 }

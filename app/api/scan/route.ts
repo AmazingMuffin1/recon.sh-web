@@ -69,18 +69,22 @@ function sanitizeError(message: string): string {
  * A request with neither Origin nor Referer is treated as a CLI / curl call
  * and allowed through. Anything explicit but mismatching is rejected.
  */
+const STRICT_ORIGIN = process.env.SAME_ORIGIN_STRICT === "1";
+
 function isAllowedOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");
   const host = (request.headers.get("host") ?? "").toLowerCase();
-  if (!origin && !referer) return true;
+  if (!origin && !referer) return !STRICT_ORIGIN;
 
   const matches = (raw: string | null) => {
     if (!raw) return false;
     try {
       const u = new URL(raw);
       const h = u.host.toLowerCase();
-      return h === host || h === "localhost" || h === "127.0.0.1";
+      if (h === host) return true;
+      if (STRICT_ORIGIN) return false;
+      return h === "localhost" || h === "127.0.0.1";
     } catch {
       return false;
     }

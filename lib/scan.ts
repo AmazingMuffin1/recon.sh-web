@@ -11,6 +11,7 @@
 
 import type { ApiKeys, Send } from "./types";
 import {
+  EMAIL_HARVEST_MAX_CHARS,
   emailRegexFor,
   INTERESTING_PATH,
   SENSITIVE_PARAM,
@@ -170,7 +171,11 @@ export async function runScan(
   const emailRe = emailRegexFor(domain);
   const allEmails = new Set<string>();
   const extractEmails = (text: string) => {
-    for (const m of text.matchAll(emailRe)) allEmails.add(m[0].toLowerCase());
+    if (!text) return;
+    const slice = text.length > EMAIL_HARVEST_MAX_CHARS
+      ? text.slice(0, EMAIL_HARVEST_MAX_CHARS)
+      : text;
+    for (const m of slice.matchAll(emailRe)) allEmails.add(m[0].toLowerCase());
   };
   // Names collected from RDAP contacts + GitHub commit authors. Fed into
   // the permutation generator at the end of the Emails phase.
